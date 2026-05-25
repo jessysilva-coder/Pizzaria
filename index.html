@@ -4,16 +4,18 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Claudão da Massa | Sistema de Pedidos</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
       --verde: #1f5b18;
+      --verde-2: #2f7d23;
+      --verde-3: #66a85c;
+      --verde-4: #8bcf7f;
       --verde-escuro: #123a0f;
       --vermelho: #b91c1c;
-      --vermelho-escuro: #8f1414;
       --creme: #fff8ec;
       --bege: #f3dfbd;
       --marrom: #7a4a20;
-      --laranja: #f59e0b;
       --texto: #2d241d;
       --cinza: #6b7280;
       --branco: #ffffff;
@@ -21,642 +23,187 @@
       --radius: 22px;
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: Inter, Segoe UI, Arial, sans-serif;
-    }
-
-    body {
-      min-height: 100vh;
-      background:
-        radial-gradient(circle at top left, rgba(245, 158, 11, 0.18), transparent 32%),
-        radial-gradient(circle at bottom right, rgba(31, 91, 24, 0.18), transparent 35%),
-        var(--creme);
-      color: var(--texto);
-    }
-
-    button, input, textarea, select {
-      font: inherit;
-    }
-
-    button {
-      border: none;
-      cursor: pointer;
-    }
-
-    .hidden {
-      display: none !important;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: Inter, Segoe UI, Arial, sans-serif; }
+    body { min-height: 100vh; background: var(--creme); color: var(--texto); }
+    button, input, textarea, select { font: inherit; }
+    button { border: none; cursor: pointer; }
+    .hidden { display: none !important; }
 
     .login-page {
       min-height: 100vh;
-      display: grid;
-      place-items: center;
-      padding: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding: 34px 7vw;
+      background: linear-gradient(90deg, rgba(18,58,15,0.18), rgba(18,58,15,0.02)), url("fundo inicial.png") center/cover no-repeat;
     }
 
     .login-card {
-      width: min(960px, 100%);
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      background: rgba(255, 255, 255, 0.9);
+      width: min(430px, 100%);
+      background: rgba(255,255,255,0.96);
       border-radius: 32px;
       box-shadow: var(--sombra);
-      overflow: hidden;
       border: 1px solid rgba(122, 74, 32, 0.12);
-    }
-
-    .login-brand {
-      background: linear-gradient(145deg, var(--verde), var(--verde-escuro));
-      padding: 42px;
-      color: var(--branco);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      gap: 22px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .login-brand::after {
-      content: "";
-      position: absolute;
-      width: 260px;
-      height: 260px;
-      border-radius: 999px;
-      background: rgba(255,255,255,0.08);
-      right: -90px;
-      top: -70px;
-    }
-
-    .logo {
-      width: 160px;
-      height: 160px;
-      object-fit: contain;
-      border-radius: 50%;
-      background: #fff;
-      padding: 8px;
-      box-shadow: 0 16px 30px rgba(0,0,0,0.22);
-      z-index: 1;
-    }
-
-    .login-brand h1 {
-      font-size: clamp(2rem, 4vw, 3.6rem);
-      line-height: 0.95;
-      max-width: 380px;
-      z-index: 1;
-    }
-
-    .login-brand p {
-      font-size: 1.05rem;
-      opacity: 0.92;
-      max-width: 420px;
-      z-index: 1;
-    }
-
-    .login-form {
-      padding: 52px 42px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
+      padding: 38px;
+      display: grid;
       gap: 18px;
     }
 
-    .login-form h2 {
-      font-size: 2rem;
-      color: var(--verde-escuro);
+    .login-logo { width: 142px; height: 142px; object-fit: contain; margin: 0 auto 4px; display: block; }
+    .login-card h1 { text-align: center; font-size: 2rem; color: var(--verde-escuro); }
+
+    .field { display: flex; flex-direction: column; gap: 8px; position: relative; }
+    .field label { font-weight: 850; color: var(--marrom); font-size: 0.92rem; }
+    .field input, .field textarea, .field select {
+      width: 100%; border: 2px solid rgba(122, 74, 32, 0.16); border-radius: 16px; padding: 13px 14px;
+      background: #fffdf8; color: var(--texto); outline: none; transition: 0.2s;
     }
+    .field input:focus, .field textarea:focus, .field select:focus { border-color: var(--verde); box-shadow: 0 0 0 4px rgba(31, 91, 24, 0.12); }
 
-    .field {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
+    .primary-btn { background: linear-gradient(145deg, var(--verde), var(--verde-escuro)); color: var(--branco); border-radius: 16px; padding: 14px 18px; font-weight: 950; box-shadow: 0 12px 24px rgba(31, 91, 24, 0.24); transition: 0.15s; }
+    .primary-btn:hover { transform: translateY(-1px); filter: brightness(1.04); }
+    .secondary-btn { background: #fff; color: var(--verde); border: 2px solid rgba(31, 91, 24, 0.2); border-radius: 14px; padding: 11px 14px; font-weight: 900; }
+    .danger-btn { background: var(--vermelho); color: var(--branco); border-radius: 14px; padding: 11px 14px; font-weight: 900; }
+    .msg { min-height: 22px; font-weight: 850; color: var(--vermelho); }
 
-    .field label {
-      font-weight: 800;
-      color: var(--marrom);
-      font-size: 0.92rem;
-    }
+    .app { min-height: 100vh; display: grid; grid-template-columns: 280px 1fr; }
+    .sidebar { background: linear-gradient(180deg, var(--verde-escuro), var(--verde)); color: var(--branco); padding: 26px 22px; display: flex; flex-direction: column; gap: 22px; position: sticky; top: 0; height: 100vh; z-index: 3; }
+    .sidebar-logo { width: 150px; height: 150px; object-fit: contain; margin: 0 auto; display: block; filter: drop-shadow(0 12px 16px rgba(0,0,0,.25)); }
+    .welcome { text-align: center; font-weight: 900; line-height: 1.25; padding-bottom: 18px; border-bottom: 1px solid rgba(255,255,255,0.16); }
+    .welcome span { display: block; opacity: 0.82; font-size: .85rem; margin-bottom: 4px; }
+    .nav { display: flex; flex-direction: column; gap: 10px; }
+    .nav button { text-align: left; padding: 13px 14px; border-radius: 16px; color: var(--branco); background: rgba(255,255,255,0.09); font-weight: 950; transition: 0.18s; }
+    .nav button.active, .nav button:hover { background: var(--branco); color: var(--verde-escuro); }
 
-    .field input,
-    .field textarea,
-    .field select {
-      width: 100%;
-      border: 2px solid rgba(122, 74, 32, 0.16);
-      border-radius: 16px;
-      padding: 13px 14px;
-      background: #fffdf8;
-      color: var(--texto);
-      outline: none;
-      transition: 0.2s;
-    }
+    .main { padding: 30px; padding-right: 30px; }
+    .main.with-production { padding-right: 390px; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 22px; }
+    .topbar h2 { font-size: clamp(1.9rem, 3vw, 2.7rem); color: var(--verde-escuro); }
 
-    .field input:focus,
-    .field textarea:focus,
-    .field select:focus {
-      border-color: var(--verde);
-      box-shadow: 0 0 0 4px rgba(31, 91, 24, 0.12);
-    }
+    .production-panel { position: fixed; top: 0; right: 0; width: 360px; height: 100vh; background: #fffdf8; border-left: 1px solid rgba(122,74,32,.16); box-shadow: -16px 0 35px rgba(35,24,13,.12); padding: 22px; z-index: 2; overflow: auto; }
+    .production-panel h3 { color: var(--verde-escuro); margin-bottom: 14px; }
+    .production-list { display: grid; gap: 12px; }
+    .production-item { background: #fff; color: var(--texto); border-radius: 18px; padding: 14px; display: grid; gap: 8px; border: 1px solid rgba(122,74,32,.13); box-shadow: 0 10px 24px rgba(35,24,13,.08); }
+    .production-item strong { color: var(--verde-escuro); }
 
-    .primary-btn {
-      background: linear-gradient(145deg, var(--vermelho), var(--vermelho-escuro));
-      color: var(--branco);
-      border-radius: 16px;
-      padding: 14px 18px;
-      font-weight: 900;
-      box-shadow: 0 12px 24px rgba(185, 28, 28, 0.25);
-      transition: transform 0.15s ease, filter 0.15s ease;
-    }
+    .card { background: rgba(255, 255, 255, 0.92); border: 1px solid rgba(122, 74, 32, 0.12); border-radius: var(--radius); padding: 22px; box-shadow: 0 12px 30px rgba(35, 24, 13, 0.08); }
+    .grid { display: grid; gap: 16px; }
+    .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .section-title { color: var(--marrom); font-size: 1.1rem; margin-bottom: 16px; font-weight: 950; }
+    .form-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
 
-    .primary-btn:hover {
-      transform: translateY(-1px);
-      filter: brightness(1.04);
-    }
+    .filters { display: flex; align-items: end; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+    .filters .field { min-width: 160px; }
 
-    .secondary-btn {
-      background: #fff;
-      color: var(--verde);
-      border: 2px solid rgba(31, 91, 24, 0.2);
-      border-radius: 14px;
-      padding: 11px 14px;
-      font-weight: 900;
-    }
+    .metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-bottom: 16px; }
+    .metric-card { background: linear-gradient(145deg, #fff, #fff5df); border-radius: 24px; padding: 22px; border: 1px solid rgba(122, 74, 32, 0.12); display: flex; align-items: center; gap: 16px; }
+    .metric-icon { width: 58px; height: 58px; border-radius: 18px; display: grid; place-items: center; background: rgba(31,91,24,.12); font-size: 1.8rem; }
+    .metric-card span { color: var(--cinza); font-weight: 900; font-size: 0.88rem; }
+    .metric-card strong { display: block; font-size: 2.4rem; color: var(--verde-escuro); margin-top: 4px; }
 
-    .danger-btn {
-      background: var(--vermelho);
-      color: var(--branco);
-      border-radius: 14px;
-      padding: 11px 14px;
-      font-weight: 900;
-    }
+    .chart-card { min-height: 360px; }
+    .chart-card canvas { width: 100% !important; max-height: 280px; }
+    .chart-wide { margin-top: 16px; min-height: 350px; }
+    .chart-wide canvas { max-height: 270px; }
 
-    .msg {
-      min-height: 22px;
-      font-weight: 800;
-      color: var(--vermelho);
-    }
+    .customer-preview { background: #fff8ec; border: 2px dashed rgba(122, 74, 32, 0.22); border-radius: 18px; padding: 16px; display: grid; gap: 6px; }
+    .autocomplete-list { position: absolute; z-index: 5; top: 100%; left: 0; right: 0; background: #fff; border-radius: 16px; box-shadow: 0 16px 30px rgba(35,24,13,.16); border: 1px solid rgba(122,74,32,.14); overflow: hidden; max-height: 260px; overflow-y: auto; }
+    .autocomplete-item { padding: 12px 14px; cursor: pointer; display: grid; gap: 2px; border-bottom: 1px solid rgba(122,74,32,.08); }
+    .autocomplete-item:hover { background: #fff4db; }
+    .autocomplete-item strong { color: var(--verde-escuro); }
+    .autocomplete-item span { color: var(--cinza); font-size: .85rem; font-weight: 750; }
 
-    .app {
-      min-height: 100vh;
-      display: grid;
-      grid-template-columns: 280px 1fr;
-    }
+    .pizza-type { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .type-btn { padding: 16px; border-radius: 18px; background: #fff; border: 2px solid rgba(122, 74, 32, 0.18); font-weight: 950; color: var(--marrom); }
+    .type-btn.active { background: var(--verde); color: #fff; border-color: var(--verde); }
 
-    .sidebar {
-      background: linear-gradient(180deg, var(--verde-escuro), var(--verde));
-      color: var(--branco);
-      padding: 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 22px;
-      position: sticky;
-      top: 0;
-      height: 100vh;
-      overflow-y: auto;
-    }
+    .flavors { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 12px; }
+    .flavor-btn { padding: 12px; border-radius: 18px; border: 2px solid rgba(122, 74, 32, 0.14); background: #fff; text-align: left; min-height: 90px; display: grid; grid-template-columns: 42px 1fr; align-items: center; gap: 10px; transition: 0.15s; }
+    .flavor-img { width: 42px; height: 42px; border-radius: 10px; object-fit: cover; display: block; background: #fff4db; border: 1px solid rgba(122, 74, 32, 0.12); grid-row: span 2; }
+    .flavor-text { display: grid; gap: 4px; }
+    .flavor-btn strong { color: var(--verde-escuro); line-height: 1.15; font-size: .93rem; }
+    .flavor-btn span { color: var(--vermelho); font-weight: 950; font-size: .88rem; }
+    .flavor-btn.selected { background: var(--bege); border-color: var(--verde); transform: translateY(-1px); }
+    .order-summary { margin-top: 16px; padding: 16px; border-radius: 18px; background: linear-gradient(145deg, rgba(31,91,24,0.08), rgba(245,158,11,0.13)); font-weight: 900; }
+    .cart-list { display: grid; gap: 10px; margin-top: 12px; }
+    .cart-item { border: 1px solid rgba(122,74,32,.12); border-radius: 16px; padding: 12px; background: #fffdf8; display: flex; justify-content: space-between; gap: 12px; align-items: center; }
+    .empty-state { color: var(--cinza); font-weight: 800; padding: 12px 0; }
+    .footer { margin-top: 28px; padding: 18px; text-align: center; color: var(--cinza); font-weight: 850; font-size: .9rem; }
 
-    .sidebar-brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding-bottom: 16px;
-      border-bottom: 1px solid rgba(255,255,255,0.14);
-    }
-
-    .sidebar-brand img {
-      width: 58px;
-      height: 58px;
-      object-fit: contain;
-      background: #fff;
-      border-radius: 50%;
-      padding: 4px;
-    }
-
-    .sidebar-brand strong {
-      display: block;
-      font-size: 1.05rem;
-      line-height: 1.1;
-    }
-
-    .sidebar-brand span {
-      font-size: 0.78rem;
-      opacity: 0.8;
-    }
-
-    .nav {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .nav button {
-      text-align: left;
-      padding: 13px 14px;
-      border-radius: 16px;
-      color: var(--branco);
-      background: rgba(255,255,255,0.09);
-      font-weight: 900;
-      transition: 0.18s;
-    }
-
-    .nav button.active,
-    .nav button:hover {
-      background: var(--branco);
-      color: var(--verde-escuro);
-    }
-
-    .production-box {
-      margin-top: auto;
-      background: rgba(255,255,255,0.1);
-      border: 1px solid rgba(255,255,255,0.14);
-      border-radius: 22px;
-      padding: 14px;
-    }
-
-    .production-box h3 {
-      font-size: 1rem;
-      margin-bottom: 10px;
-    }
-
-    .production-list {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      max-height: 270px;
-      overflow: auto;
-      padding-right: 4px;
-    }
-
-    .production-item {
-      background: rgba(255,255,255,0.92);
-      color: var(--texto);
-      border-radius: 16px;
-      padding: 12px;
-      display: grid;
-      gap: 8px;
-      font-size: 0.86rem;
-    }
-
-    .production-item strong {
-      color: var(--verde-escuro);
-    }
-
-    .main {
-      padding: 28px;
-    }
-
-    .topbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 24px;
-    }
-
-    .topbar h2 {
-      font-size: clamp(1.8rem, 3vw, 2.6rem);
-      color: var(--verde-escuro);
-    }
-
-    .topbar p {
-      color: var(--cinza);
-      margin-top: 4px;
-      font-weight: 700;
-    }
-
-    .card {
-      background: rgba(255, 255, 255, 0.88);
-      border: 1px solid rgba(122, 74, 32, 0.12);
-      border-radius: var(--radius);
-      padding: 22px;
-      box-shadow: 0 12px 30px rgba(35, 24, 13, 0.08);
-    }
-
-    .grid {
-      display: grid;
-      gap: 16px;
-    }
-
-    .grid-2 {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .grid-3 {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-
-    .section-title {
-      color: var(--marrom);
-      font-size: 1.1rem;
-      margin-bottom: 16px;
-      font-weight: 950;
-    }
-
-    .form-actions {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-top: 16px;
-    }
-
-    .customer-preview {
-      background: #fff8ec;
-      border: 2px dashed rgba(122, 74, 32, 0.22);
-      border-radius: 18px;
-      padding: 16px;
-      display: grid;
-      gap: 6px;
-    }
-
-    .pizza-type {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
-    }
-
-    .type-btn {
-      padding: 16px;
-      border-radius: 18px;
-      background: #fff;
-      border: 2px solid rgba(122, 74, 32, 0.18);
-      font-weight: 950;
-      color: var(--marrom);
-    }
-
-    .type-btn.active {
-      background: var(--verde);
-      color: #fff;
-      border-color: var(--verde);
-    }
-
-    .flavors {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 12px;
-      margin-top: 12px;
-    }
-
-    .flavor-btn {
-      padding: 14px;
-      border-radius: 18px;
-      border: 2px solid rgba(122, 74, 32, 0.14);
-      background: #fff;
-      text-align: left;
-      min-height: 86px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      gap: 8px;
-      transition: 0.15s;
-    }
-
-    .flavor-btn strong {
-    .flavor-img {
-      width: 100%;
-      height: 82px;
-      border-radius: 16px;
-      object-fit: cover;
-      display: block;
-      background: #fff4db;
-      border: 1px solid rgba(122, 74, 32, 0.12);
-    }
-
-    .flavor-btn strong {
-      color: var(--verde-escuro);
-      line-height: 1.15;
-    }
-
-    .flavor-btn span {
-      color: var(--vermelho);
-      font-weight: 950;
-    }
-
-    .flavor-btn.selected {
-      background: var(--bege);
-      border-color: var(--vermelho);
-      transform: translateY(-1px);
-    }
-
-    .order-summary {
-      margin-top: 16px;
-      padding: 16px;
-      border-radius: 18px;
-      background: linear-gradient(145deg, rgba(31,91,24,0.08), rgba(245,158,11,0.13));
-      font-weight: 900;
-    }
-
-    .metrics {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 16px;
-      margin-bottom: 16px;
-    }
-
-    .metric-card {
-      background: linear-gradient(145deg, #fff, #fff5df);
-      border-radius: 22px;
-      padding: 20px;
-      border: 1px solid rgba(122, 74, 32, 0.12);
-    }
-
-    .metric-card span {
-      color: var(--cinza);
-      font-weight: 900;
-      font-size: 0.88rem;
-    }
-
-    .metric-card strong {
-      display: block;
-      font-size: 2.6rem;
-      color: var(--verde-escuro);
-      margin-top: 4px;
-    }
-
-    .bar-list {
-      display: grid;
-      gap: 12px;
-    }
-
-    .bar-row {
-      display: grid;
-      gap: 6px;
-    }
-
-    .bar-label {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      font-weight: 900;
-      font-size: 0.92rem;
-    }
-
-    .bar-bg {
-      height: 14px;
-      background: #f0dfc2;
-      border-radius: 999px;
-      overflow: hidden;
-    }
-
-    .bar-fill {
-      height: 100%;
-      background: linear-gradient(90deg, var(--verde), var(--laranja), var(--vermelho));
-      border-radius: 999px;
-      width: 0;
-      transition: width 0.4s ease;
-    }
-
-    .empty-state {
-      color: var(--cinza);
-      font-weight: 800;
-      padding: 12px 0;
-    }
-    .footer {
-      margin-top: 28px;
-      padding: 18px;
-      text-align: center;
-      color: var(--cinza);
-      font-weight: 850;
-      font-size: 0.9rem;
-    }
-
-
-    @media (max-width: 980px) {
-      .login-card,
-      .app,
-      .grid-2,
-      .grid-3,
-      .metrics,
-      .pizza-type,
-      .flavors {
-        grid-template-columns: 1fr;
-      }
-
-      .sidebar {
-        position: relative;
-        height: auto;
-      }
+    @media (max-width: 1100px) {
+      .login-page { justify-content: center; }
+      .app, .grid-2, .metrics, .pizza-type, .flavors { grid-template-columns: 1fr; }
+      .sidebar { position: relative; height: auto; }
+      .production-panel { position: relative; width: auto; height: auto; border-left: 0; }
+      .main, .main.with-production { padding-right: 24px; }
     }
   </style>
 </head>
 <body>
   <section id="loginPage" class="login-page">
-    <div class="login-card">
-      <div class="login-brand">
-        <img src="logo.png" alt="Logo da pizzaria" class="logo" onerror="this.style.display='none'" />
-        <h1>Claudão da Massa</h1>
-        <p>O sistema de pedidos onde a pizza sai redonda e os dados também.</p>
-      </div>
-
-      <form id="loginForm" class="login-form">
-        <h2>Entrar no sistema</h2>
-        <p>Use o acesso de teste para abrir a central de pedidos.</p>
-
-        <div class="field">
-          <label for="usuario">Usuário</label>
-          <input id="usuario" type="text" placeholder="Digite o usuário" autocomplete="username" />
-        </div>
-
-        <div class="field">
-          <label for="senha">Senha</label>
-          <input id="senha" type="password" placeholder="Digite a senha" autocomplete="current-password" />
-        </div>
-
-        <button class="primary-btn" type="submit">Entrar agora</button>
-        <div id="loginMsg" class="msg"></div>
-      </form>
-    </div>
+    <form id="loginForm" class="login-card">
+      <img src="logo.png" alt="Logo da pizzaria" class="login-logo" onerror="this.style.display='none'" />
+      <h1>Entrar no sistema</h1>
+      <div class="field"><label for="usuario">Usuário</label><input id="usuario" type="text" autocomplete="username" /></div>
+      <div class="field"><label for="senha">Senha</label><input id="senha" type="password" autocomplete="current-password" /></div>
+      <button class="primary-btn" type="submit">Entrar agora</button>
+      <div id="loginMsg" class="msg"></div>
+    </form>
   </section>
 
   <section id="app" class="app hidden">
     <aside class="sidebar">
-      <div class="sidebar-brand">
-        <img src="logo.png" alt="Logo da pizzaria" onerror="this.style.display='none'" />
-        <div>
-          <strong>Claudão da Massa</strong>
-          <span>Central Nota 11</span>
-        </div>
-      </div>
-
+      <img src="logo.png" alt="Logo da pizzaria" class="sidebar-logo" onerror="this.style.display='none'" />
+      <div class="welcome"><span>Bem-vindo,</span>Claudão da Massa</div>
       <nav class="nav">
-        <button class="nav-btn active" data-screen="clientes">Cadastrar clientes</button>
+        <button class="nav-btn active" data-screen="dashboard">Dashboard</button>
+        <button class="nav-btn" data-screen="clientes">Cadastrar clientes</button>
         <button class="nav-btn" data-screen="atendimentos">Gestão de atendimentos</button>
-        <button class="nav-btn" data-screen="dashboard">Dashboard</button>
       </nav>
-
-      <div class="production-box">
-        <h3>Pedidos em produção</h3>
-        <div id="productionList" class="production-list"></div>
-      </div>
     </aside>
 
-    <main class="main">
+    <main id="main" class="main">
       <div class="topbar">
-        <div>
-          <h2 id="screenTitle">Cadastrar clientes</h2>
-          <p>API de CEP + Google Sheets + pedidos de pizza com Efeito UAU.</p>
-        </div>
+        <h2 id="screenTitle">Dashboard de atendimentos</h2>
         <button id="logoutBtn" class="secondary-btn">Sair</button>
       </div>
 
-      <section id="screenClientes" class="screen">
+      <section id="screenDashboard" class="screen">
+        <div class="card filters">
+          <div class="field"><label>Mês</label><select id="filtroMes"></select></div>
+          <div class="field"><label>Ano</label><select id="filtroAno"></select></div>
+          <button class="secondary-btn" id="limparFiltrosBtn">Limpar filtros</button>
+        </div>
+
+        <div class="metrics">
+          <div class="metric-card"><div class="metric-icon">👥</div><div><span>Total de clientes cadastrados</span><strong id="totalClientes">0</strong></div></div>
+          <div class="metric-card"><div class="metric-icon">🍕</div><div><span>Total de pedidos</span><strong id="totalPedidos">0</strong></div></div>
+        </div>
+
+        <div class="grid grid-2">
+          <div class="card chart-card"><h3 class="section-title">Tipos de pizza</h3><canvas id="chartTipos"></canvas></div>
+          <div class="card chart-card"><h3 class="section-title">Ranking dos sabores</h3><canvas id="chartSabores"></canvas></div>
+        </div>
+        <div class="card chart-wide"><h3 class="section-title">Total de pedidos por dia</h3><canvas id="chartDias"></canvas></div>
+      </section>
+
+      <section id="screenClientes" class="screen hidden">
         <div class="card">
           <h3 class="section-title">Novo cliente</h3>
           <form id="clienteForm" class="grid grid-2">
-            <div class="field">
-              <label>CEP</label>
-              <div style="display: grid; grid-template-columns: 1fr auto; gap: 8px;">
-                <input id="cep" placeholder="Ex.: 01001000" maxlength="9" />
-                <button class="secondary-btn" type="button" id="buscarCepBtn">Buscar</button>
-              </div>
-            </div>
-            <div class="field">
-              <label>Telefone</label>
-              <input id="telefoneCliente" placeholder="Ex.: 11999999999" />
-            </div>
-            <div class="field">
-              <label>Nome completo</label>
-              <input id="nomeCliente" placeholder="Nome do cliente" />
-            </div>
-            <div class="field">
-              <label>Número</label>
-              <input id="numero" placeholder="Número da casa" />
-            </div>
-            <div class="field">
-              <label>Rua</label>
-              <input id="rua" />
-            </div>
-            <div class="field">
-              <label>Bairro</label>
-              <input id="bairro" />
-            </div>
-            <div class="field">
-              <label>Cidade</label>
-              <input id="cidade" />
-            </div>
-            <div class="field">
-              <label>Estado</label>
-              <input id="estado" />
-            </div>
-            <div class="field">
-              <label>UF</label>
-              <input id="uf" />
-            </div>
-            <div class="field">
-              <label>DDD</label>
-              <input id="ddd" />
-            </div>
-            <div class="field" style="grid-column: 1 / -1;">
-              <label>Complemento</label>
-              <input id="complemento" placeholder="Apto, bloco, referência..." />
-            </div>
-            <div class="form-actions" style="grid-column: 1 / -1;">
-              <button class="primary-btn" type="submit">Cadastrar cliente</button>
-              <button class="secondary-btn" type="button" id="limparClienteBtn">Limpar</button>
-            </div>
-            <div id="clienteMsg" class="msg" style="grid-column: 1 / -1;"></div>
+            <div class="field"><label>CEP</label><div style="display:grid;grid-template-columns:1fr auto;gap:8px;"><input id="cep" placeholder="Ex.: 01001000" maxlength="9" /><button class="secondary-btn" type="button" id="buscarCepBtn">Buscar</button></div></div>
+            <div class="field"><label>Telefone</label><input id="telefoneCliente" placeholder="Ex.: 11999999999" /></div>
+            <div class="field"><label>Nome completo</label><input id="nomeCliente" placeholder="Nome do cliente" /></div>
+            <div class="field"><label>Número</label><input id="numero" placeholder="Número da casa" /></div>
+            <div class="field"><label>Rua</label><input id="rua" /></div>
+            <div class="field"><label>Bairro</label><input id="bairro" /></div>
+            <div class="field"><label>Cidade</label><input id="cidade" /></div>
+            <div class="field"><label>Estado</label><input id="estado" /></div>
+            <div class="field"><label>UF</label><input id="uf" /></div>
+            <div class="field"><label>DDD</label><input id="ddd" /></div>
+            <div class="field" style="grid-column:1/-1;"><label>Complemento</label><input id="complemento" placeholder="Apto, bloco, referência..." /></div>
+            <div class="form-actions" style="grid-column:1/-1;"><button class="primary-btn" type="submit">Cadastrar cliente</button><button class="secondary-btn" type="button" id="limparClienteBtn">Limpar</button></div>
+            <div id="clienteMsg" class="msg" style="grid-column:1/-1;"></div>
           </form>
         </div>
       </section>
@@ -666,492 +213,251 @@
           <div class="card">
             <h3 class="section-title">Buscar cliente pelo telefone</h3>
             <div class="grid">
-              <div class="field">
-                <label>Telefone</label>
-                <input id="telefoneBusca" placeholder="Digite o telefone cadastrado" />
-              </div>
+              <div class="field"><label>Telefone</label><input id="telefoneBusca" placeholder="Digite o telefone cadastrado" autocomplete="off" /><div id="autocompleteClientes" class="autocomplete-list hidden"></div></div>
               <button id="buscarClienteBtn" class="primary-btn">Buscar cliente</button>
               <div id="clienteEncontrado" class="customer-preview hidden"></div>
               <div id="buscaMsg" class="msg"></div>
             </div>
           </div>
-
           <div class="card">
             <h3 class="section-title">Tipo da pizza</h3>
-            <div class="pizza-type">
-              <button class="type-btn active" data-type="Inteira">Pizza inteira</button>
-              <button class="type-btn" data-type="Meio a meio">Meio a meio</button>
-            </div>
+            <div class="pizza-type"><button class="type-btn active" data-type="Inteira">Pizza inteira</button><button class="type-btn" data-type="Meio a meio">Meio a meio</button></div>
             <div class="order-summary" id="orderSummary">Selecione 1 sabor.</div>
+            <div class="form-actions"><button id="adicionarPizzaBtn" class="primary-btn" type="button">Adicionar pizza ao pedido</button></div>
           </div>
         </div>
 
-        <div class="card" style="margin-top: 16px;">
+        <div class="card" style="margin-top:16px;">
           <h3 class="section-title">Escolha os sabores</h3>
           <div id="flavors" class="flavors"></div>
-
-          <div class="field" style="margin-top: 18px;">
-            <label>Observações do pedido</label>
-            <textarea id="observacoes" rows="4" placeholder="Ex.: sem cebola, caprichar no queijo, entregar sem errar o gráfico de pizza..."></textarea>
-          </div>
-
-          <div class="form-actions">
-            <button id="cadastrarPedidoBtn" class="primary-btn">Cadastrar pedido</button>
-            <button id="limparPedidoBtn" class="secondary-btn">Limpar pedido</button>
-          </div>
+          <h3 class="section-title" style="margin-top:18px;">Pizzas do pedido</h3>
+          <div id="cartList" class="cart-list"></div>
+          <div class="field" style="margin-top:18px;"><label>Observações do pedido</label><textarea id="observacoes" rows="4" placeholder="Ex.: sem cebola, caprichar no queijo..."></textarea></div>
+          <div class="form-actions"><button id="cadastrarPedidoBtn" class="primary-btn">Cadastrar pedido</button><button id="limparPedidoBtn" class="secondary-btn">Limpar pedido</button></div>
           <div id="pedidoMsg" class="msg"></div>
         </div>
       </section>
 
-      <section id="screenDashboard" class="screen hidden">
-        <div class="metrics">
-          <div class="metric-card">
-            <span>Total de clientes cadastrados</span>
-            <strong id="totalClientes">0</strong>
-          </div>
-          <div class="metric-card">
-            <span>Total de pedidos</span>
-            <strong id="totalPedidos">0</strong>
-          </div>
-        </div>
-
-        <div class="grid grid-3">
-          <div class="card">
-            <h3 class="section-title">Tipos de pizza mais pedidos</h3>
-            <div id="chartTipos" class="bar-list"></div>
-          </div>
-          <div class="card">
-            <h3 class="section-title">Ranking dos sabores</h3>
-            <div id="chartSabores" class="bar-list"></div>
-          </div>
-          <div class="card">
-            <h3 class="section-title">Total de pedidos por mês</h3>
-            <div id="chartMeses" class="bar-list"></div>
-          </div>
-        </div>
-      </section>
-          <footer class="footer">Todos os direitos reservados para Escola Karen Abecia</footer>
+      <footer class="footer">Todos os direitos reservados para Escola Karen Abecia</footer>
     </main>
+
+    <aside id="productionPanel" class="production-panel hidden">
+      <h3>Pedidos em produção</h3>
+      <div id="productionList" class="production-list"></div>
+    </aside>
   </section>
 
   <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbyln-ZthuFV0fbfhMUGFt-LZghdKiwg88a2Xz_ujk_XE8U9Gr1DgUh5iWWW60kN7p2MxA/exec";
-
     const USER_TESTE = "Claudão da Massa";
     const SENHA_TESTE = "1234";
 
-    let sabores = [];
-    let clienteAtual = null;
-    let tipoPizza = "Inteira";
-    let saboresSelecionados = [];
+    const PRECOS_PADRAO = {
+      "KPI com Catupiry": 49.90, "Calabresa de Dinâmica": 44.90, "Marguerita de Metas": 42.90, "Frango com Dashboards": 47.90,
+      "Pepperoni com Power BI crocante": 52.90, "Quatro indicadores de Queijos": 54.90, "Portuguesa analítica": 48.90, "Bacon de Barras": 51.90,
+      "Mussarela Mensal": 39.90, "Napolitana Nota 11": 46.90, "UAU com Cheddar": 53.90, "Gráfico de Pizza Suprema": 56.90
+    };
 
+    let sabores = [], clientes = [], clienteAtual = null, tipoPizza = "Inteira", saboresSelecionados = [], carrinho = [];
+    let chartTipos, chartSabores, chartDias;
     const $ = (id) => document.getElementById(id);
     const money = (value) => Number(value || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    const limparNum = (v) => String(v || "").replace(/\D/g, "");
 
     document.addEventListener("DOMContentLoaded", async () => {
-      configurarLogin();
-      configurarNavegacao();
-      configurarClientes();
-      configurarPedidos();
+      configurarLogin(); configurarNavegacao(); configurarClientes(); configurarPedidos(); configurarFiltros();
       await carregarDadosIniciais();
     });
 
     function configurarLogin() {
-      $("loginForm").addEventListener("submit", (e) => {
+      $("loginForm").addEventListener("submit", async (e) => {
         e.preventDefault();
-        const usuario = $("usuario").value.trim();
-        const senha = $("senha").value.trim();
-
-        if (usuario === USER_TESTE && senha === SENHA_TESTE) {
-          $("loginPage").classList.add("hidden");
-          $("app").classList.remove("hidden");
-          atualizarPedidosProducao();
-          atualizarDashboard();
-        } else {
-          $("loginMsg").textContent = "Usuário ou senha incorretos.";
-        }
+        if ($("usuario").value.trim() === USER_TESTE && $("senha").value.trim() === SENHA_TESTE) {
+          $("loginPage").classList.add("hidden"); $("app").classList.remove("hidden");
+          await atualizarTudo();
+        } else $("loginMsg").textContent = "Usuário ou senha incorretos.";
       });
-
-      $("logoutBtn").addEventListener("click", () => {
-        $("app").classList.add("hidden");
-        $("loginPage").classList.remove("hidden");
-        $("senha").value = "";
-      });
+      $("logoutBtn").addEventListener("click", () => { $("app").classList.add("hidden"); $("loginPage").classList.remove("hidden"); $("senha").value = ""; });
     }
 
     function configurarNavegacao() {
-      document.querySelectorAll(".nav-btn").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          document.querySelectorAll(".nav-btn").forEach((b) => b.classList.remove("active"));
-          btn.classList.add("active");
-
-          const screen = btn.dataset.screen;
-          document.querySelectorAll(".screen").forEach((s) => s.classList.add("hidden"));
-          $("screen" + capitalizar(screen)).classList.remove("hidden");
-
-          const titulos = {
-            clientes: "Cadastrar clientes",
-            atendimentos: "Gestão de atendimentos",
-            dashboard: "Dashboard de atendimentos"
-          };
-
-          $("screenTitle").textContent = titulos[screen];
-
-          if (screen === "dashboard") atualizarDashboard();
-          if (screen === "atendimentos") atualizarPedidosProducao();
-        });
-      });
+      document.querySelectorAll(".nav-btn").forEach(btn => btn.addEventListener("click", () => {
+        document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active")); btn.classList.add("active");
+        const screen = btn.dataset.screen; document.querySelectorAll(".screen").forEach(s => s.classList.add("hidden")); $("screen" + capitalizar(screen)).classList.remove("hidden");
+        $("screenTitle").textContent = { dashboard:"Dashboard de atendimentos", clientes:"Cadastrar clientes", atendimentos:"Gestão de atendimentos" }[screen];
+        if (screen === "dashboard") atualizarDashboard();
+      }));
     }
 
     function configurarClientes() {
       $("cep").addEventListener("blur", buscarCep);
-      $("cep").addEventListener("input", () => {
-        const cep = $("cep").value.replace(/\D/g, "");
-        if (cep.length === 8) buscarCep();
-      });
-      $("cep").addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          buscarCep();
-        }
-      });
+      $("cep").addEventListener("input", () => { if (limparNum($("cep").value).length === 8) buscarCep(); });
+      $("cep").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); buscarCep(); }});
       $("buscarCepBtn").addEventListener("click", buscarCep);
       $("limparClienteBtn").addEventListener("click", limparFormularioCliente);
-
       $("clienteForm").addEventListener("submit", async (e) => {
         e.preventDefault();
-        const dados = {
-          action: "cadastrarCliente",
-          nome: $("nomeCliente").value.trim(),
-          telefone: $("telefoneCliente").value.trim(),
-          cep: $("cep").value.trim(),
-          rua: $("rua").value.trim(),
-          bairro: $("bairro").value.trim(),
-          cidade: $("cidade").value.trim(),
-          estado: $("estado").value.trim(),
-          uf: $("uf").value.trim(),
-          ddd: $("ddd").value.trim(),
-          numero: $("numero").value.trim(),
-          complemento: $("complemento").value.trim()
-        };
-
-        if (!dados.nome || !dados.telefone || !dados.cep || !dados.numero) {
-          $("clienteMsg").textContent = "Preencha nome, telefone, CEP e número.";
-          return;
-        }
-
-        try {
-          $("clienteMsg").textContent = "Cadastrando cliente...";
-          const resposta = await postAPI(dados);
-          $("clienteMsg").textContent = resposta.mensagem || "Cliente cadastrado.";
-          limparFormularioCliente();
-          atualizarDashboard();
-        } catch (erro) {
-          $("clienteMsg").textContent = "Erro ao cadastrar cliente.";
-        }
+        const dados = { action:"cadastrarCliente", nome:$("nomeCliente").value.trim(), telefone:$("telefoneCliente").value.trim(), cep:$("cep").value.trim(), rua:$("rua").value.trim(), bairro:$("bairro").value.trim(), cidade:$("cidade").value.trim(), estado:$("estado").value.trim(), uf:$("uf").value.trim(), ddd:$("ddd").value.trim(), numero:$("numero").value.trim(), complemento:$("complemento").value.trim() };
+        if (!dados.nome || !dados.telefone || !dados.cep || !dados.numero) { $("clienteMsg").textContent = "Preencha nome, telefone, CEP e número."; return; }
+        try { $("clienteMsg").textContent = "Cadastrando cliente..."; const r = await postAPI(dados); $("clienteMsg").textContent = r.mensagem || "Cliente cadastrado."; limparFormularioCliente(); await atualizarTudo(); } catch { $("clienteMsg").textContent = "Erro ao cadastrar cliente."; }
       });
     }
 
     async function buscarCep() {
-      const cep = $("cep").value.replace(/\D/g, "");
-
-      if (cep.length !== 8) {
-        $("clienteMsg").textContent = "Digite um CEP com 8 números.";
-        return;
-      }
-
+      const cep = limparNum($("cep").value);
+      if (cep.length !== 8) { $("clienteMsg").textContent = "Digite um CEP com 8 números."; return; }
       $("clienteMsg").textContent = "Buscando CEP...";
-
       try {
-        const resposta = await fetch(`https://viacep.com.br/ws/${cep}/json/`, {
-          method: "GET",
-          headers: { "Accept": "application/json" }
-        });
-
-        if (!resposta.ok) {
-          throw new Error("Falha na consulta do CEP");
-        }
-
+        const resposta = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+        if (!resposta.ok) throw new Error();
         const dados = await resposta.json();
-
-        if (dados.erro) {
-          alert("CEP não encontrado.");
-          $("clienteMsg").textContent = "CEP não encontrado.";
-          return;
-        }
-
-        $("cep").value = cep.replace(/(\d{5})(\d{3})/, "$1-$2");
-        $("rua").value = dados.logradouro || "";
-        $("bairro").value = dados.bairro || "";
-        $("cidade").value = dados.localidade || "";
-        $("estado").value = dados.estado || dados.uf || "";
-        $("uf").value = dados.uf || "";
-        $("ddd").value = dados.ddd || "";
+        if (dados.erro) { alert("CEP não encontrado."); $("clienteMsg").textContent = "CEP não encontrado."; return; }
+        $("cep").value = cep.replace(/(\d{5})(\d{3})/, "$1-$2"); $("rua").value = dados.logradouro || ""; $("bairro").value = dados.bairro || ""; $("cidade").value = dados.localidade || ""; $("estado").value = dados.estado || dados.uf || ""; $("uf").value = dados.uf || ""; $("ddd").value = dados.ddd || "";
         $("clienteMsg").textContent = "CEP encontrado com sucesso!";
-      } catch (erro) {
-        console.error("Erro ao buscar CEP:", erro);
-        $("clienteMsg").textContent = "Não foi possível buscar o CEP. Verifique a conexão ou teste outro CEP.";
-      }
+      } catch { $("clienteMsg").textContent = "Não foi possível buscar o CEP. Verifique a conexão ou teste outro CEP."; }
     }
 
     function configurarPedidos() {
       $("buscarClienteBtn").addEventListener("click", buscarCliente);
+      $("telefoneBusca").addEventListener("input", mostrarAutocompleteClientes);
+      $("telefoneBusca").addEventListener("focus", mostrarAutocompleteClientes);
+      $("adicionarPizzaBtn").addEventListener("click", adicionarPizzaCarrinho);
       $("cadastrarPedidoBtn").addEventListener("click", cadastrarPedido);
       $("limparPedidoBtn").addEventListener("click", limparPedido);
+      document.addEventListener("click", (e) => { if (!e.target.closest("#telefoneBusca") && !e.target.closest("#autocompleteClientes")) $("autocompleteClientes").classList.add("hidden"); });
+      document.querySelectorAll(".type-btn").forEach(btn => btn.addEventListener("click", () => { document.querySelectorAll(".type-btn").forEach(b => b.classList.remove("active")); btn.classList.add("active"); tipoPizza = btn.dataset.type; saboresSelecionados = []; renderSabores(); atualizarResumoPedido(); }));
+    }
 
-      document.querySelectorAll(".type-btn").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          document.querySelectorAll(".type-btn").forEach((b) => b.classList.remove("active"));
-          btn.classList.add("active");
-          tipoPizza = btn.dataset.type;
-          saboresSelecionados = [];
-          renderSabores();
-          atualizarResumoPedido();
-        });
-      });
+    async function mostrarAutocompleteClientes() {
+      const termo = limparNum($("telefoneBusca").value);
+      const box = $("autocompleteClientes"); box.innerHTML = "";
+      if (clientes.length === 0) await carregarClientes();
+      if (termo.length < 2 || clientes.length === 0) { box.classList.add("hidden"); return; }
+      const filtrados = clientes.filter(c => limparNum(c.telefone).includes(termo) || String(c.nome || "").toLowerCase().includes($("telefoneBusca").value.toLowerCase())).slice(0, 6);
+      if (filtrados.length === 0) { box.classList.add("hidden"); return; }
+      filtrados.forEach(c => { const div = document.createElement("div"); div.className = "autocomplete-item"; div.innerHTML = `<strong>${c.nome}</strong><span>${c.telefone} • ${c.rua || ""}, ${c.numero || ""}</span>`; div.onclick = () => selecionarCliente(c); box.appendChild(div); });
+      box.classList.remove("hidden");
     }
 
     async function buscarCliente() {
       const telefone = $("telefoneBusca").value.trim();
-      if (!telefone) {
-        $("buscaMsg").textContent = "Digite um telefone para buscar.";
-        return;
-      }
+      if (!telefone) { $("buscaMsg").textContent = "Digite um telefone para buscar."; return; }
+      if (clientes.length === 0) await carregarClientes();
+      const local = clientes.find(c => limparNum(c.telefone) === limparNum(telefone));
+      if (local) { selecionarCliente(local); return; }
+      try { $("buscaMsg").textContent = "Buscando cliente..."; const r = await getAPI(`action=buscarCliente&telefone=${encodeURIComponent(telefone)}`); if (!r.sucesso) { clienteAtual = null; $("clienteEncontrado").classList.add("hidden"); $("buscaMsg").textContent = r.mensagem || "Cliente não encontrado."; return; } selecionarCliente(r.cliente); } catch { $("buscaMsg").textContent = "Erro ao buscar cliente."; }
+    }
 
-      try {
-        $("buscaMsg").textContent = "Buscando cliente...";
-        const resposta = await getAPI(`action=buscarCliente&telefone=${encodeURIComponent(telefone)}`);
-
-        if (!resposta.sucesso) {
-          clienteAtual = null;
-          $("clienteEncontrado").classList.add("hidden");
-          $("buscaMsg").textContent = resposta.mensagem || "Cliente não encontrado.";
-          return;
-        }
-
-        clienteAtual = resposta.cliente;
-        $("clienteEncontrado").classList.remove("hidden");
-        $("clienteEncontrado").innerHTML = `
-          <strong>${clienteAtual.nome}</strong>
-          <span>${clienteAtual.telefone}</span>
-          <span>${clienteAtual.rua}, ${clienteAtual.numero} ${clienteAtual.complemento || ""}</span>
-          <span>${clienteAtual.bairro} - ${clienteAtual.cidade}/${clienteAtual.uf}</span>
-        `;
-        $("buscaMsg").textContent = "Cliente encontrado!";
-      } catch (erro) {
-        $("buscaMsg").textContent = "Erro ao buscar cliente.";
-      }
+    function selecionarCliente(c) {
+      clienteAtual = c; $("telefoneBusca").value = c.telefone || ""; $("autocompleteClientes").classList.add("hidden"); $("clienteEncontrado").classList.remove("hidden");
+      $("clienteEncontrado").innerHTML = `<strong>${c.nome}</strong><span>${c.telefone}</span><span>${c.rua || ""}, ${c.numero || ""} ${c.complemento || ""}</span><span>${c.bairro || ""} - ${c.cidade || ""}/${c.uf || ""}</span>`;
+      $("buscaMsg").textContent = "Cliente selecionado!";
     }
 
     function renderSabores() {
-      const container = $("flavors");
-      container.innerHTML = "";
-
+      const container = $("flavors"); container.innerHTML = "";
       sabores.forEach((item, index) => {
-        const btn = document.createElement("button");
-        btn.className = "flavor-btn";
-        btn.type = "button";
+        const btn = document.createElement("button"); btn.className = "flavor-btn"; btn.type = "button";
         const numeroImagem = index + 1;
-        btn.innerHTML = `<img class="flavor-img" src="pizza_${numeroImagem}.png" alt="${item.sabor}" onerror="this.style.display='none'" /><strong>${item.sabor}</strong><span>${money(item.preco)}</span>`;
-
-        if (saboresSelecionados.some((s) => s.sabor === item.sabor)) {
-          btn.classList.add("selected");
-        }
-
-        btn.addEventListener("click", () => selecionarSabor(item));
-        container.appendChild(btn);
+        btn.innerHTML = `<img class="flavor-img" src="pizza_${numeroImagem}.png" alt="${item.sabor}" onerror="this.style.display='none'" /><div class="flavor-text"><strong>${item.sabor}</strong><span>${money(item.preco)}</span></div>`;
+        if (saboresSelecionados.some(s => s.sabor === item.sabor)) btn.classList.add("selected");
+        btn.addEventListener("click", () => selecionarSabor(item)); container.appendChild(btn);
       });
     }
 
     function selecionarSabor(item) {
       const limite = tipoPizza === "Inteira" ? 1 : 2;
-      const jaExiste = saboresSelecionados.some((s) => s.sabor === item.sabor);
-
-      if (jaExiste) {
-        saboresSelecionados = saboresSelecionados.filter((s) => s.sabor !== item.sabor);
-      } else {
-        if (saboresSelecionados.length >= limite) {
-          saboresSelecionados.shift();
-        }
-        saboresSelecionados.push(item);
-      }
-
-      renderSabores();
-      atualizarResumoPedido();
+      const existe = saboresSelecionados.some(s => s.sabor === item.sabor);
+      if (existe) saboresSelecionados = saboresSelecionados.filter(s => s.sabor !== item.sabor); else { if (saboresSelecionados.length >= limite) saboresSelecionados.shift(); saboresSelecionados.push(item); }
+      renderSabores(); atualizarResumoPedido();
     }
 
-    function calcularValorPedido() {
-      if (saboresSelecionados.length === 0) return 0;
-      const total = saboresSelecionados.reduce((soma, item) => soma + Number(item.preco || 0), 0);
-      return total / saboresSelecionados.length;
-    }
+    function calcularValorPizza(lista = saboresSelecionados) { if (!lista.length) return 0; return lista.reduce((s, i) => s + Number(i.preco || 0), 0) / lista.length; }
+    function atualizarResumoPedido() { const limite = tipoPizza === "Inteira" ? 1 : 2; const nomes = saboresSelecionados.map(s => s.sabor).join(" + ") || "Nenhum sabor selecionado"; $("orderSummary").innerHTML = `Tipo: ${tipoPizza}<br>Seleção: ${nomes}<br>Escolha ${limite} sabor(es). Valor: ${money(calcularValorPizza())}`; }
 
-    function atualizarResumoPedido() {
+    function adicionarPizzaCarrinho() {
       const limite = tipoPizza === "Inteira" ? 1 : 2;
-      const valor = calcularValorPedido();
-      const nomes = saboresSelecionados.map((s) => s.sabor).join(" + ") || "Nenhum sabor selecionado";
-      $("orderSummary").innerHTML = `Tipo: ${tipoPizza}<br>Seleção: ${nomes}<br>Escolha ${limite} sabor(es). Valor: ${money(valor)}`;
+      if (saboresSelecionados.length !== limite) { $("pedidoMsg").textContent = `Selecione ${limite} sabor(es) para adicionar a pizza.`; return; }
+      carrinho.push({ tipoPizza, sabores: [...saboresSelecionados], valor: calcularValorPizza() }); saboresSelecionados = []; renderSabores(); atualizarResumoPedido(); renderCarrinho(); $("pedidoMsg").textContent = "Pizza adicionada ao pedido.";
+    }
+
+    function renderCarrinho() {
+      const box = $("cartList"); box.innerHTML = "";
+      if (!carrinho.length) { box.innerHTML = `<div class="empty-state">Nenhuma pizza adicionada ainda.</div>`; return; }
+      carrinho.forEach((p, idx) => { const div = document.createElement("div"); div.className = "cart-item"; div.innerHTML = `<div><strong>${idx+1}. ${p.tipoPizza}</strong><br>${p.sabores.map(s => s.sabor).join(" + ")}<br><strong>${money(p.valor)}</strong></div><button class="danger-btn" type="button">Remover</button>`; div.querySelector("button").onclick = () => { carrinho.splice(idx,1); renderCarrinho(); }; box.appendChild(div); });
     }
 
     async function cadastrarPedido() {
-      const limite = tipoPizza === "Inteira" ? 1 : 2;
-
-      if (!clienteAtual) {
-        $("pedidoMsg").textContent = "Busque um cliente antes de cadastrar o pedido.";
-        return;
-      }
-
-      if (saboresSelecionados.length !== limite) {
-        $("pedidoMsg").textContent = `Selecione ${limite} sabor(es) para continuar.`;
-        return;
-      }
-
-      const dados = {
-        action: "cadastrarPedido",
-        telefone: clienteAtual.telefone,
-        nomeCliente: clienteAtual.nome,
-        tipoPizza,
-        sabor1: saboresSelecionados[0]?.sabor || "",
-        sabor2: saboresSelecionados[1]?.sabor || "",
-        valor: calcularValorPedido(),
-        observacoes: $("observacoes").value.trim()
-      };
-
+      if (!clienteAtual) { $("pedidoMsg").textContent = "Busque um cliente antes de cadastrar o pedido."; return; }
+      if (!carrinho.length) adicionarPizzaCarrinho();
+      if (!carrinho.length) return;
       try {
         $("pedidoMsg").textContent = "Cadastrando pedido...";
-        const resposta = await postAPI(dados);
-        $("pedidoMsg").textContent = resposta.mensagem || "Pedido cadastrado.";
-        limparPedido(false);
-        atualizarPedidosProducao();
-        atualizarDashboard();
-      } catch (erro) {
-        $("pedidoMsg").textContent = "Erro ao cadastrar pedido.";
-      }
+        for (const pizza of carrinho) {
+          await postAPI({ action:"cadastrarPedido", telefone:clienteAtual.telefone, nomeCliente:clienteAtual.nome, tipoPizza:pizza.tipoPizza, sabor1:pizza.sabores[0]?.sabor || "", sabor2:pizza.sabores[1]?.sabor || "", valor:pizza.valor, observacoes:$("observacoes").value.trim() });
+        }
+        $("pedidoMsg").textContent = "Pedido cadastrado com sucesso!"; limparPedido(false); await atualizarTudo();
+      } catch { $("pedidoMsg").textContent = "Erro ao cadastrar pedido."; }
     }
 
     async function atualizarPedidosProducao() {
       try {
-        const resposta = await getAPI("action=listarPedidos");
-        const pedidos = (resposta.pedidos || []).filter((p) => p.status === "Em produção");
-        const box = $("productionList");
-        box.innerHTML = "";
-
-        if (pedidos.length === 0) {
-          box.innerHTML = `<div class="empty-state" style="color:#fff;">Nenhum pedido em produção.</div>`;
-          return;
-        }
-
-        pedidos.reverse().forEach((pedido) => {
-          const item = document.createElement("div");
-          item.className = "production-item";
-          item.innerHTML = `
-            <strong>${pedido.nomeCliente}</strong>
-            <span>${pedido.sabor1}${pedido.sabor2 ? " + " + pedido.sabor2 : ""}</span>
-            <span>${money(pedido.valor)}</span>
-            <button class="danger-btn" type="button">Concluir</button>
-          `;
-          item.querySelector("button").addEventListener("click", () => concluirPedido(pedido.id));
-          box.appendChild(item);
-        });
-      } catch (erro) {
-        $("productionList").innerHTML = `<div class="empty-state" style="color:#fff;">Erro ao carregar pedidos.</div>`;
-      }
+        const r = await getAPI("action=listarPedidos"); const pedidos = (r.pedidos || []).filter(p => p.status === "Em produção"); const panel = $("productionPanel"), box = $("productionList"), main = $("main"); box.innerHTML = "";
+        if (!pedidos.length) { panel.classList.add("hidden"); main.classList.remove("with-production"); return; }
+        panel.classList.remove("hidden"); main.classList.add("with-production");
+        pedidos.reverse().forEach(p => { const item = document.createElement("div"); item.className = "production-item"; item.innerHTML = `<strong>${p.nomeCliente}</strong><span>${p.sabor1}${p.sabor2 ? " + " + p.sabor2 : ""}</span><span>${money(p.valor)}</span><button class="danger-btn" type="button">Concluir</button>`; item.querySelector("button").onclick = () => concluirPedido(p.id); box.appendChild(item); });
+      } catch {}
     }
 
-    async function concluirPedido(idPedido) {
-      try {
-        await postAPI({ action: "concluirPedido", idPedido });
-        atualizarPedidosProducao();
-        atualizarDashboard();
-      } catch (erro) {
-        alert("Erro ao concluir pedido.");
-      }
+    async function concluirPedido(idPedido) { try { await postAPI({ action:"concluirPedido", idPedido }); await atualizarTudo(); } catch { alert("Erro ao concluir pedido."); } }
+
+    function configurarFiltros() {
+      $("filtroMes").addEventListener("change", atualizarDashboard); $("filtroAno").addEventListener("change", atualizarDashboard);
+      $("limparFiltrosBtn").addEventListener("click", () => { $("filtroMes").value = ""; $("filtroAno").value = ""; atualizarDashboard(); });
     }
 
     async function atualizarDashboard() {
       try {
-        const resposta = await getAPI("action=dashboard");
-        const dashboard = resposta.dashboard || {};
-
-        $("totalClientes").textContent = dashboard.totalClientes || 0;
-        $("totalPedidos").textContent = dashboard.totalPedidos || 0;
-
-        renderBarChart("chartTipos", dashboard.tiposPizza || {});
-        renderBarChart("chartSabores", dashboard.sabores || {});
-        renderBarChart("chartMeses", dashboard.pedidosPorMes || {});
-      } catch (erro) {
-        console.error(erro);
-      }
+        const dashboardResp = await getAPI("action=dashboard");
+        const pedidosResp = await getAPI("action=listarPedidos");
+        const pedidos = pedidosResp.pedidos || [];
+        montarFiltros(pedidos);
+        const mes = $("filtroMes").value, ano = $("filtroAno").value;
+        const filtrados = pedidos.filter(p => { const d = new Date(p.dataPedido); return (!mes || String(d.getMonth()+1) === mes) && (!ano || String(d.getFullYear()) === ano); });
+        $("totalClientes").textContent = dashboardResp.dashboard?.totalClientes || 0;
+        $("totalPedidos").textContent = filtrados.length;
+        const tipos = {}, saboresRank = {}, dias = {};
+        filtrados.forEach(p => { tipos[p.tipoPizza] = (tipos[p.tipoPizza] || 0) + 1; if (p.sabor1) saboresRank[p.sabor1] = (saboresRank[p.sabor1] || 0) + 1; if (p.sabor2) saboresRank[p.sabor2] = (saboresRank[p.sabor2] || 0) + 1; const d = new Date(p.dataPedido); const key = String(d.getDate()).padStart(2,"0"); dias[key] = (dias[key] || 0) + 1; });
+        chartTipos = renderDoughnut(chartTipos, "chartTipos", tipos); chartSabores = renderBar(chartSabores, "chartSabores", saboresRank); chartDias = renderLine(chartDias, "chartDias", dias);
+      } catch (e) { console.error(e); }
     }
 
-    function renderBarChart(containerId, obj) {
-      const container = $(containerId);
-      const entries = Object.entries(obj).sort((a, b) => b[1] - a[1]);
-      container.innerHTML = "";
-
-      if (entries.length === 0) {
-        container.innerHTML = `<div class="empty-state">Sem dados ainda.</div>`;
-        return;
-      }
-
-      const max = Math.max(...entries.map(([, value]) => value));
-
-      entries.forEach(([label, value]) => {
-        const width = max === 0 ? 0 : (value / max) * 100;
-        const row = document.createElement("div");
-        row.className = "bar-row";
-        row.innerHTML = `
-          <div class="bar-label"><span>${label}</span><span>${value}</span></div>
-          <div class="bar-bg"><div class="bar-fill" style="width:${width}%"></div></div>
-        `;
-        container.appendChild(row);
-      });
+    function montarFiltros(pedidos) {
+      const mesAtual = $("filtroMes").value, anoAtual = $("filtroAno").value;
+      const meses = [["","Todos"],["1","Janeiro"],["2","Fevereiro"],["3","Março"],["4","Abril"],["5","Maio"],["6","Junho"],["7","Julho"],["8","Agosto"],["9","Setembro"],["10","Outubro"],["11","Novembro"],["12","Dezembro"]];
+      $("filtroMes").innerHTML = meses.map(([v,t]) => `<option value="${v}">${t}</option>`).join("");
+      const anos = [...new Set(pedidos.map(p => new Date(p.dataPedido).getFullYear()).filter(Boolean))].sort((a,b)=>b-a);
+      $("filtroAno").innerHTML = `<option value="">Todos</option>` + anos.map(a => `<option value="${a}">${a}</option>`).join("");
+      $("filtroMes").value = mesAtual; $("filtroAno").value = anoAtual;
     }
 
-    async function carregarDadosIniciais() {
-      try {
-        const resposta = await getAPI("action=listarSabores");
-        sabores = resposta.sabores || [];
-        renderSabores();
-        atualizarResumoPedido();
-      } catch (erro) {
-        $("flavors").innerHTML = `<div class="empty-state">Não foi possível carregar os sabores.</div>`;
-      }
-    }
+    function cores(n) { const base = ["#1f5b18", "#2f7d23", "#66a85c", "#123a0f", "#8bcf7f", "#4e9444"]; return Array.from({length: Math.max(n, 1)}, (_,i)=>base[i%base.length]); }
+    function entries(obj) { return Object.entries(obj).sort((a,b)=>b[1]-a[1]); }
+    function destroy(chart) { if (chart) chart.destroy(); }
+    function renderDoughnut(chart, id, obj) { destroy(chart); const e = entries(obj); return new Chart($(id), { type:"doughnut", data:{ labels:e.map(x=>x[0]), datasets:[{ data:e.map(x=>x[1]), backgroundColor:cores(e.length), borderWidth:3 }] }, options:{ responsive:true, plugins:{ legend:{ position:"bottom" }}}}); }
+    function renderBar(chart, id, obj) { destroy(chart); const e = entries(obj).slice(0,10).reverse(); return new Chart($(id), { type:"bar", data:{ labels:e.map(x=>x[0]), datasets:[{ data:e.map(x=>x[1]), backgroundColor:"#1f5b18", borderRadius:10 }] }, options:{ indexAxis:"y", responsive:true, plugins:{ legend:{ display:false }}, scales:{ x:{ beginAtZero:true, ticks:{ precision:0 }}} }}); }
+    function renderLine(chart, id, obj) { destroy(chart); const e = Object.entries(obj).sort((a,b)=>Number(a[0])-Number(b[0])); return new Chart($(id), { type:"line", data:{ labels:e.map(x=>x[0]), datasets:[{ label:"Pedidos", data:e.map(x=>x[1]), borderColor:"#1f5b18", backgroundColor:"rgba(31,91,24,.14)", pointBackgroundColor:"#1f5b18", pointBorderColor:"#1f5b18", pointRadius:5, tension:.35, fill:true }] }, options:{ responsive:true, plugins:{ legend:{ display:false }}, scales:{ y:{ beginAtZero:true, ticks:{ precision:0 }}} }}); }
 
-    async function getAPI(params) {
-      const resposta = await fetch(`${API_URL}?${params}`);
-      return resposta.json();
-    }
-
-    async function postAPI(dados) {
-      const resposta = await fetch(API_URL, {
-        method: "POST",
-        body: JSON.stringify(dados)
-      });
-      return resposta.json();
-    }
-
-    function limparFormularioCliente() {
-      ["cep", "telefoneCliente", "nomeCliente", "numero", "rua", "bairro", "cidade", "estado", "uf", "ddd", "complemento"].forEach((id) => $(id).value = "");
-    }
-
-    function limparPedido(limparClienteAtual = true) {
-      if (limparClienteAtual) {
-        clienteAtual = null;
-        $("telefoneBusca").value = "";
-        $("clienteEncontrado").classList.add("hidden");
-        $("buscaMsg").textContent = "";
-      }
-      saboresSelecionados = [];
-      $("observacoes").value = "";
-      renderSabores();
-      atualizarResumoPedido();
-    }
-
-    function capitalizar(texto) {
-      return texto.charAt(0).toUpperCase() + texto.slice(1);
-    }
+    async function carregarDadosIniciais() { await carregarSabores(); await carregarClientes(); renderCarrinho(); }
+    async function atualizarTudo() { await carregarClientes(); await atualizarPedidosProducao(); await atualizarDashboard(); }
+    async function carregarSabores() { try { const r = await getAPI("action=listarSabores"); sabores = (r.sabores || []).map(s => ({ sabor:s.sabor, preco:parsePreco(s.preco, s.sabor) })); renderSabores(); atualizarResumoPedido(); } catch { sabores = Object.entries(PRECOS_PADRAO).map(([sabor, preco]) => ({sabor, preco})); renderSabores(); atualizarResumoPedido(); } }
+    async function carregarClientes() { try { const r = await getAPI("action=listarClientes"); clientes = r.clientes || []; } catch { clientes = []; } }
+    function parsePreco(valor, sabor) { if (typeof valor === "number" && valor > 0) return valor; const n = Number(String(valor || "").replace("R$", "").replace(/\./g, "").replace(",", ".").trim()); return n > 0 ? n : (PRECOS_PADRAO[sabor] || 0); }
+    async function getAPI(params) { const resposta = await fetch(`${API_URL}?${params}`); return resposta.json(); }
+    async function postAPI(dados) { const resposta = await fetch(API_URL, { method:"POST", body:JSON.stringify(dados) }); return resposta.json(); }
+    function limparFormularioCliente() { ["cep","telefoneCliente","nomeCliente","numero","rua","bairro","cidade","estado","uf","ddd","complemento"].forEach(id => $(id).value = ""); }
+    function limparPedido(limparClienteAtual = true) { if (limparClienteAtual) { clienteAtual = null; $("telefoneBusca").value = ""; $("clienteEncontrado").classList.add("hidden"); $("buscaMsg").textContent = ""; } saboresSelecionados = []; carrinho = []; $("observacoes").value = ""; renderSabores(); atualizarResumoPedido(); renderCarrinho(); }
+    function capitalizar(texto) { return texto.charAt(0).toUpperCase() + texto.slice(1); }
   </script>
 </body>
 </html>
