@@ -118,8 +118,8 @@
     .type-btn.active { background: var(--verde); color: #fff; border-color: var(--verde); }
 
     .flavors { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 12px; }
-    .flavor-btn { padding: 12px; border-radius: 18px; border: 2px solid rgba(122, 74, 32, 0.14); background: #fff; text-align: left; min-height: 90px; display: grid; grid-template-columns: 42px 1fr; align-items: center; gap: 10px; transition: 0.15s; }
-    .flavor-img { width: 42px; height: 42px; border-radius: 10px; object-fit: cover; display: block; background: #fff4db; border: 1px solid rgba(122, 74, 32, 0.12); grid-row: span 2; }
+    .flavor-btn { padding: 12px; border-radius: 18px; border: 2px solid rgba(122, 74, 32, 0.14); background: #fff; text-align: left; min-height: 98px; display: grid; grid-template-columns: 64px 1fr; align-items: center; gap: 12px; transition: 0.15s; }
+    .flavor-img { width: 64px; height: 64px; border-radius: 12px; object-fit: cover; display: block; background: #fff4db; border: 1px solid rgba(122, 74, 32, 0.12); grid-row: span 2; }
     .flavor-text { display: grid; gap: 4px; }
     .flavor-btn strong { color: var(--verde-escuro); line-height: 1.15; font-size: .93rem; }
     .flavor-btn span { color: var(--vermelho); font-weight: 950; font-size: .88rem; }
@@ -393,23 +393,91 @@
       if (!carrinho.length) return;
       try {
         $("pedidoMsg").textContent = "Cadastrando pedido...";
+        const codigoPedido = `PED-${Date.now()}`;
+        const observacaoBase = $("observacoes").value.trim();
+
         for (const pizza of carrinho) {
-          await postAPI({ action:"cadastrarPedido", telefone:clienteAtual.telefone, nomeCliente:clienteAtual.nome, tipoPizza:pizza.tipoPizza, sabor1:pizza.sabores[0]?.sabor || "", sabor2:pizza.sabores[1]?.sabor || "", valor:pizza.valor, observacoes:$("observacoes").value.trim() });
+          await postAPI({
+            action:"cadastrarPedido",
+            telefone:clienteAtual.telefone,
+            nomeCliente:clienteAtual.nome,
+            tipoPizza:pizza.tipoPizza,
+            sabor1:pizza.sabores[0]?.sabor || "",
+            sabor2:pizza.sabores[1]?.sabor || "",
+            valor:pizza.valor,
+            observacoes:`${codigoPedido} | ${observacaoBase}`
+          });
         }
         $("pedidoMsg").textContent = "Pedido cadastrado com sucesso!"; limparPedido(false); await atualizarTudo();
       } catch { $("pedidoMsg").textContent = "Erro ao cadastrar pedido."; }
     }
 
+    function obterCodigoPedido(pedido) {
+      const observacoes = String(pedido.observacoes || "");
+      const encontrado = observacoes.match(new RegExp("PED-\\d+"));
+      return encontrado ? encontrado[0] : String(pedido.id);
+    }
+
+    function limparObservacaoPedido(observacoes) {
+      return String(observacoes || "").replace(new RegExp("PED-\\d+\\s*\\|\\s*"), "").trim();
+    }
+
     async function atualizarPedidosProducao() {
       try {
-        const r = await getAPI("action=listarPedidos"); const pedidos = (r.pedidos || []).filter(p => p.status === "Em produção"); const panel = $("productionPanel"), box = $("productionList"), main = $("main"); box.innerHTML = "";
+        const r = await getAPI("action=listarPedidos");
+        const pedidos = (r.pedidos || []).filter(p => p.status === "Em produção");
+        const panel = $("productionPanel"), box = $("productionList"), main = $("main");
+        box.innerHTML = "";
+
         if (!pedidos.length) { panel.classList.add("hidden"); main.classList.remove("with-production"); return; }
+
+        const grupos = {};
+        pedidos.forEach(p => {
+          const codigo = obterCodigoPedido(p);
+          if (!grupos[codigo]) {
+            grupos[codigo] = {
+              codigo,
+              nomeCliente: p.nomeCliente,
+              telefone: p.telefone,
+              observacoes: limparObservacaoPedido(p.observacoes),
+              valor: 0,
+              ids: [],
+              pizzas: []
+            };
+          }
+
+          grupos[codigo].ids.push(p.id);
+          grupos[codigo].valor += Number(p.valor || 0);
+          grupos[codigo].pizzas.push(`${p.sabor1}${p.sabor2 ? " + " + p.sabor2 : ""}`);
+        });
+
         panel.classList.remove("hidden"); main.classList.add("with-production");
-        pedidos.reverse().forEach(p => { const item = document.createElement("div"); item.className = "production-item"; item.innerHTML = `<strong>${p.nomeCliente}</strong><span>${p.sabor1}${p.sabor2 ? " + " + p.sabor2 : ""}</span><span>${money(p.valor)}</span><button class="danger-btn" type="button">Concluir</button>`; item.querySelector("button").onclick = () => concluirPedido(p.id); box.appendChild(item); });
+
+        Object.values(grupos).reverse().forEach(grupo => {
+          const item = document.createElement("div");
+          item.className = "production-item";
+          item.innerHTML = `
+            <strong>${grupo.nomeCliente}</strong>
+            <span>${grupo.pizzas.map((pizza, i) => `${i + 1}. ${pizza}`).join("<br>")}</span>
+            ${grupo.observacoes ? `<span><strong>Obs.:</strong> ${grupo.observacoes}</span>` : ""}
+            <span>${money(grupo.valor)}</span>
+            <button class="danger-btn" type="button">Concluir pedido</button>
+          `;
+          item.querySelector("button").onclick = () => concluirPedido(grupo.ids);
+          box.appendChild(item);
+        });
       } catch {}
     }
 
-    async function concluirPedido(idPedido) { try { await postAPI({ action:"concluirPedido", idPedido }); await atualizarTudo(); } catch { alert("Erro ao concluir pedido."); } }
+    async function concluirPedido(idPedido) {
+      try {
+        const ids = Array.isArray(idPedido) ? idPedido : [idPedido];
+        for (const id of ids) {
+          await postAPI({ action:"concluirPedido", idPedido:id });
+        }
+        await atualizarTudo();
+      } catch { alert("Erro ao concluir pedido."); }
+    }
 
     function configurarFiltros() {
       $("filtroMes").addEventListener("change", atualizarDashboard); $("filtroAno").addEventListener("change", atualizarDashboard);
