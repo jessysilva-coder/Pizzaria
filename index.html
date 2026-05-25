@@ -587,7 +587,10 @@
           <form id="clienteForm" class="grid grid-2">
             <div class="field">
               <label>CEP</label>
-              <input id="cep" placeholder="Ex.: 01001000" />
+              <div style="display: grid; grid-template-columns: 1fr auto; gap: 8px;">
+                <input id="cep" placeholder="Ex.: 01001000" maxlength="9" />
+                <button class="secondary-btn" type="button" id="buscarCepBtn">Buscar</button>
+              </div>
             </div>
             <div class="field">
               <label>Telefone</label>
@@ -781,6 +784,17 @@
 
     function configurarClientes() {
       $("cep").addEventListener("blur", buscarCep);
+      $("cep").addEventListener("input", () => {
+        const cep = $("cep").value.replace(/\D/g, "");
+        if (cep.length === 8) buscarCep();
+      });
+      $("cep").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          buscarCep();
+        }
+      });
+      $("buscarCepBtn").addEventListener("click", buscarCep);
       $("limparClienteBtn").addEventListener("click", limparFormularioCliente);
 
       $("clienteForm").addEventListener("submit", async (e) => {
@@ -819,12 +833,24 @@
 
     async function buscarCep() {
       const cep = $("cep").value.replace(/\D/g, "");
-      if (cep.length !== 8) return;
+
+      if (cep.length !== 8) {
+        $("clienteMsg").textContent = "Digite um CEP com 8 números.";
+        return;
+      }
 
       $("clienteMsg").textContent = "Buscando CEP...";
 
       try {
-        const resposta = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+        const resposta = await fetch(`https://viacep.com.br/ws/${cep}/json/`, {
+          method: "GET",
+          headers: { "Accept": "application/json" }
+        });
+
+        if (!resposta.ok) {
+          throw new Error("Falha na consulta do CEP");
+        }
+
         const dados = await resposta.json();
 
         if (dados.erro) {
@@ -832,15 +858,17 @@
           return;
         }
 
+        $("cep").value = cep.replace(/(\d{5})(\d{3})/, "$1-$2");
         $("rua").value = dados.logradouro || "";
         $("bairro").value = dados.bairro || "";
         $("cidade").value = dados.localidade || "";
-        $("estado").value = dados.estado || "";
+        $("estado").value = dados.estado || dados.uf || "";
         $("uf").value = dados.uf || "";
         $("ddd").value = dados.ddd || "";
         $("clienteMsg").textContent = "CEP encontrado com sucesso!";
       } catch (erro) {
-        $("clienteMsg").textContent = "Não foi possível buscar o CEP.";
+        console.error("Erro ao buscar CEP:", erro);
+        $("clienteMsg").textContent = "Não foi possível buscar o CEP. Verifique a conexão ou teste outro CEP.";
       }
     }
 
